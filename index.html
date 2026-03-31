@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ElephantGuard AI v2</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:ital,wght@0,400;0,700&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Core Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Project Assets -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Background Canvases -->
+  <canvas id="three-canvas"></canvas>
+
+  <!-- Login Overlay -->
+  <div id="login-overlay" class="active">
+    <div class="login-box">
+      <div class="login-logo">🐘 Elephant<span>Guard</span> AI</div>
+      <div class="login-subtitle">SECURE TERMINAL // AUTHORIZED PERSONNEL ONLY</div>
+      
+      <div class="login-glitch-layer"></div>
+
+      <div class="login-input-group">
+        <label>ACCESS CODE</label>
+        <input type="password" id="auth-code" inputmode="numeric" placeholder="••••" maxlength="4" autocomplete="off" autofocus>
+      </div>
+
+      <button class="btn-primary login-btn" id="login-submit">INITIALIZE SYSTEM</button>
+      <div class="login-status" id="login-status">AWAITING CREDENTIALS...</div>
+    </div>
+  </div>
+
+  <!-- Alert Banner -->
+  <div id="alert-banner">
+    <span id="alert-text">System initialising...</span>
+    <button class="close-btn" id="close-alert-btn">✕</button>
+  </div>
+
+  <!-- Navigation -->
+  <nav id="main-nav" style="display: none; opacity: 0;">
+    <div class="nav-logo">🐘 Elephant<span>Guard</span> AI</div>
+    <ul class="nav-links">
+      <li><a href="#dashboard">Dashboard</a></li>
+      <li><a href="#cnn-demo">CNN Vision</a></li>
+      <li><a href="#drone-dispatch">Drone</a></li>
+      <li><a href="#acoustic-analysis">Acoustic</a></li>
+      <li><a href="#map-section">Geospatial</a></li>
+      <li><a href="#gesture-section">Gesture</a></li>
+    </ul>
+  </nav>
+
+  <!-- SMS Toaster Container -->
+  <div id="sms-container"></div>
+
+  <div id="app" style="display: none; opacity: 0;">
+
+    <!-- HERO -->
+    <section id="hero">
+      <div class="hero-content">
+        <span class="hero-badge">✦ Version 2 Architecture ✦</span>
+        <h1 class="hero-title">
+          <span class="t1">Protect the</span>
+          <span class="t2">WILDERNESS</span>
+          <span class="t3">ElephantGuard AI</span>
+        </h1>
+        <p class="hero-sub">
+          Modular, robust, and lightning-fast AI wildlife monitoring. Zero infinite-height bugs.
+        </p>
+        <button class="btn-primary" id="launch-dash-btn">
+          Launch Dashboard ↗
+        </button>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard">
+      <div class="sec-header">
+        <span class="sec-tag">// module_01</span>
+        <h2 class="sec-title">Real-Time <em>Sensor Dashboard</em></h2>
+        <div class="sec-line"></div>
+      </div>
+      <div class="dash-grid">
+        <!-- Sensor 1 -->
+        <div class="dash-card">
+          <div class="dash-title"><div class="status-dot"></div>INFRARED SENSOR</div>
+          <div class="metric-big" id="ir-val">--</div>
+          <div class="metric-label">SIGNAL (dBm)</div>
+          <div class="metric-delta up" id="ir-delta">▲ NOMINAL</div>
+          <div class="spark-wrapper">
+            <canvas id="ir-sparkline"></canvas>
+          </div>
+        </div>
+        <!-- Sensor 2 -->
+        <div class="dash-card">
+          <div class="dash-title"><div class="status-dot warn"></div>SEISMIC NODE</div>
+          <div class="metric-big" id="seismic-val">--</div>
+          <div class="metric-label">VIBRATION (g)</div>
+          <div class="metric-delta up" id="seismic-delta">▲ STABLE</div>
+          <div class="spark-wrapper">
+            <canvas id="seismic-sparkline"></canvas>
+          </div>
+        </div>
+        <!-- Alert Feed -->
+        <div class="dash-card wide">
+          <div class="dash-title"><div class="status-dot danger"></div>LIVE EVENT LOG</div>
+          <div class="alert-feed" id="alert-feed"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CNN DEMO -->
+    <section id="cnn-demo">
+      <div class="sec-header">
+        <span class="sec-tag">// module_02</span>
+        <h2 class="sec-title">CNN Image <em>Vision Hub</em></h2>
+        <div class="sec-line"></div>
+      </div>
+      <div class="cnn-wrapper">
+        <div class="video-box">
+          <video id="cnn-video" autoplay playsinline style="display:none;"></video>
+          <canvas id="cnn-canvas" width="640" height="480"></canvas>
+          <div class="detection-overlay" id="det-overlay">STANDBY</div>
+        </div>
+        <div class="cnn-results">
+          <div class="result-title">DETECTION STREAM</div>
+          <p class="desc">MobileNetV2 analyzing edge feed in real-time.</p>
+          <div id="cnn-bars"></div>
+          <button class="btn-primary" id="cnn-toggle-btn" style="margin-top: 1rem;">▶ START INFERENCE</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- DRONE DISPATCH -->
+    <section id="drone-dispatch">
+      <div class="sec-header">
+        <span class="sec-tag">// module_03</span>
+        <h2 class="sec-title">Thermal <em>Drone Dispatch</em></h2>
+        <div class="sec-line"></div>
+      </div>
+      <div class="drone-wrapper">
+        <div class="dash-card">
+          <div class="dash-title"><div class="status-dot"></div>DRONE FLIGHT TELEMETRY</div>
+          <p class="desc">Deploying Quadcopter to Sector 4 for aerial verification.</p>
+          <div class="drone-metrics">
+            <div><span class="lbl">ALTITUDE</span><span class="val" id="drone-alt">120m</span></div>
+            <div><span class="lbl">SPEED</span><span class="val" id="drone-spd">45km/h</span></div>
+            <div><span class="lbl">BATTERY</span><span class="val" id="drone-bat">88%</span></div>
+          </div>
+          <button class="btn-primary" id="launch-drone-btn" style="margin-top: 20px;">DEPLOY DRONE</button>
+        </div>
+        <div class="video-box drone-radar-box">
+          <canvas id="drone-canvas" width="600" height="400"></canvas>
+          <div class="detection-overlay">UAV RADAR STREAM</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACOUSTIC ANALYSIS -->
+    <section id="acoustic-analysis">
+      <div class="sec-header">
+        <span class="sec-tag">// module_04</span>
+        <h2 class="sec-title">Infrasound <em>Acoustic Matrix</em></h2>
+        <div class="sec-line"></div>
+      </div>
+      <div class="acoustic-wrapper dash-card wide">
+        <div class="dash-title"><div class="status-dot"></div>LIVE AUDIO SPECTROGRAM</div>
+        <p class="desc" style="margin-top:-10px; margin-bottom:15px;">Monitoring 14Hz - 24Hz infrasound frequencies typical of elephant rumbles.</p>
+        <div style="position:relative; width:100%; height:200px;">
+          <canvas id="acoustic-canvas"></canvas>
+        </div>
+        <div class="acoustic-stats" style="display:flex; justify-content:space-between; margin-top:15px; font-family:var(--font-mono); font-size:0.8rem; color:var(--text-dim);">
+          <span>PEAK FREQUENCY: <span id="ac-peak" style="color:var(--accent)">18.4 Hz</span></span>
+          <span>WAVE AMPLITUDE: <span id="ac-amp" style="color:var(--accent2)">NOMINAL</span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAP -->
+    <section id="map-section">
+      <div class="sec-header">
+        <span class="sec-tag">// module_05</span>
+        <h2 class="sec-title">Area <em>Geospatial Map</em></h2>
+        <div class="sec-line"></div>
+      </div>
+      <div class="map-wrapper">
+        <div id="map-placeholder">
+          <div id="real-map" style="width:100%; height:100%;"></div>
+          <button class="btn-icon" id="map-layer-btn" style="position:absolute; top:12px; right:12px; z-index:900;">🗺 TOGGLE</button>
+          
+          <div class="map-overlay-info" style="top:12px; left:12px; z-index:900;">
+            <div>📍 Region: Anamalai Tiger Reserve</div>
+            <div>🛰 Coordinates: 10.4°N 77.1°E</div>
+            <div style="color:var(--accent2);margin-top:4px">● Live Tracking Active</div>
+          </div>
+          
+          <div class="map-overlay-info" style="bottom:12px; left:12px; z-index:900;">
+            <div style="color:var(--danger); border-bottom:1px solid var(--danger); padding-bottom:4px; margin-bottom:4px;">🚨 GEOFENCE BREACH LOG</div>
+            <ul id="breach-log" style="list-style:none; font-size:.65rem; color:var(--text); padding-left:0; margin:0;">
+              <li>[02:14:00] Zone B Boundary crossed</li>
+              <li>[04:22:10] Zone D Pre-alert</li>
+            </ul>
+          </div>
+        </div>
+        <div class="map-stats-panel">
+          <div class="map-stat-card"><div class="map-stat-num" id="map-active">0</div><div class="map-stat-label">ACTIVE TRACKS</div></div>
+          <div class="map-stat-card"><div class="map-stat-num">8</div><div class="map-stat-label">MONITORED ZONES</div></div>
+          <div class="map-stat-card"><div class="map-stat-num">94%</div><div class="map-stat-label">AREA COVERAGE</div></div>
+          <div class="map-stat-card"><div class="map-stat-num" style="color:var(--danger)">0</div><div class="map-stat-label">BREACHES TODAY</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GESTURE CONTROL -->
+    <section id="gesture-section">
+      <div class="sec-header">
+        <span class="sec-tag">// module_06</span>
+        <h2 class="sec-title">Gesture <em>Control Array</em></h2>
+        <div class="sec-line"></div>
+      </div>
+      <div class="gesture-layout">
+        <div id="gesture-video-wrap">
+          <video id="gesture-video" autoplay muted playsinline style="display:none;"></video>
+          <canvas id="gesture-canvas" width="400" height="300"></canvas>
+        </div>
+        <div class="gesture-info">
+          <div class="gesture-current">
+            <span class="gesture-emoji" id="gesture-emoji">✋</span>
+            <div class="gesture-name" id="gesture-name">WAITING FOR GESTURE</div>
+          </div>
+          <div class="gesture-list">
+            <div class="gesture-item"><span class="g-icon">✋</span>Open Palm → Navigate Left</div>
+            <div class="gesture-item"><span class="g-icon">✊</span>Fist → Navigate Right</div>
+            <div class="gesture-item"><span class="g-icon">☝️</span>Point Up → Scroll Up</div>
+            <div class="gesture-item"><span class="g-icon">👇</span>Point Down → Scroll Down</div>
+            <div class="gesture-item"><span class="g-icon">🤟</span>Rock Sign → Trigger Alert</div>
+          </div>
+          <button class="btn-primary gesture-cam-btn" id="gesture-toggle-btn">📷 START SENSOR</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/cnn_module.js"></script>
+  <script src="js/drone.js"></script>
+  <script src="js/acoustic.js"></script>
+  <script src="js/map_module.js"></script>
+  <script src="js/gesture.js"></script>
+</body>
+</html>
